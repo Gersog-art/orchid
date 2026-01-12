@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Orchid Security Dashboard - REAL</title>
+    <meta charset="utf-8">
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-light: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-yellow: #f59e0b;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --border-color: #475569;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .logo-icon {
+            color: var(--accent-purple);
+            font-size: 28px;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-card);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .main-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .service-card {
+            background: var(--bg-card-light);
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-blue);
+        }
+
+        .service-card.isolation {
+            border-left-color: var(--accent-purple);
+        }
+
+        .service-card.random {
+            border-left-color: var(--accent-green);
+        }
+
+        .service-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .service-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            padding: 4px 10px;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+            border-radius: 20px;
+        }
+
+        .service-status.offline {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+        }
+
+        .service-status.error {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-yellow);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 16px;
+            background: var(--bg-card-light);
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .attacks-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        .attacks-table th {
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .attacks-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
+        }
+
+        .attacks-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .attack-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-sqli { background: rgba(220, 38, 38, 0.2); color: #fca5a5; }
+        .badge-xss { background: rgba(234, 88, 12, 0.2); color: #fdba74; }
+        .badge-lfi { background: rgba(217, 119, 6, 0.2); color: #fcd34d; }
+        .badge-rce { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; }
+        .badge-normal { background: rgba(16, 163, 74, 0.2); color: #86efac; }
+        .badge-error { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .badge-unknown { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .event-log {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 16px;
+        }
+
+        .event-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: var(--bg-card-light);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-blue);
+            font-size: 13px;
+        }
+
+        .event-time {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .event-message {
+            color: var(--text-primary);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            background: var(--accent-blue);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: var(--accent-red);
+        }
+
+        .btn-success {
+            background: var(--accent-green);
+        }
+
+        .btn-warning {
+            background: var(--accent-yellow);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .timestamp {
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <span class="logo-icon">🛡️</span>
+                <span>ORCHID SECURITY - REAL DATA</span>
+            </div>
+            <div class="system-status">
+                <div class="status-indicator" id="global-status-indicator"></div>
+                <span id="system-status-text">LOADING...</span>
+                <span id="current-time" style="color: var(--text-secondary); margin-left: 10px;">--:--:--</span>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="main-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">ML Services Status</div>
+                            <div class="card-subtitle">Real-time monitoring of detection services</div>
+                        </div>
+                        <button class="btn" onclick="checkServices()" id="refresh-btn">
+                            <span id="refresh-text">Refresh Status</span>
+                            <span id="refresh-spinner" class="loading" style="display:none; margin-left:8px;"></span>
+                        </button>
+                    </div>
+
+                    <div class="services-grid" id="services-grid">
+                        <!-- Будет заполнено JavaScript -->
+                        <div class="no-data">Loading services...</div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-attacks">0</div>
+                            <div class="stat-label">Total Attacks</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="detected-attacks">0</div>
+                            <div class="stat-label">Detected</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="blocked-ips">0</div>
+                            <div class="stat-label">Blocked IPs</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Real Attack Traffic</div>
+                            <div class="card-subtitle">Actual attacks detected by ML services</div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-danger" onclick="clearAllAttacks()" id="clear-btn">Clear Database</button>
+                            <button class="btn" onclick="loadAttacks()" id="load-attacks-btn">
+                                <span>Reload Attacks</span>
+                                <span class="loading" id="load-attacks-spinner" style="display:none; margin-left:8px;"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="margin: 16px 0; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn" onclick="loadAttacks('today')" style="padding: 6px 12px; font-size: 13px;">Today</button>
+                        <button class="btn" onclick="loadAttacks('recent')" style="padding: 6px 12px; font-size: 13px;">Recent</button>
+                        <button class="btn" onclick="loadAttacks('all')" style="padding: 6px 12px; font-size: 13px;">All</button>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table class="attacks-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Source IP</th>
+                                    <th>Attack Type</th>
+                                    <th>Endpoint</th>
+                                    <th>ML Results</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attacks-table-body">
+                                <tr id="no-attacks-row">
+                                    <td colspan="6" class="no-data">
+                                        <div class="loading" style="margin: 20px auto;"></div>
+                                        Loading attack data...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin-top: 16px; text-align: center;">
+                        <button class="btn" onclick="loadMoreAttacks()" id="load-more-btn" style="display: none;">
+                            Load More
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">System Events</div>
+                        <button class="btn" onclick="clearEvents()" style="padding: 6px 12px; font-size: 12px;">Clear</button>
+                    </div>
+                    <div class="event-log" id="event-log">
+                        <div class="event-item">
+                            <div class="event-time" id="start-time">--:--:--</div>
+                            <div class="event-message">Dashboard initialized</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Attack Types Distribution</div>
+                    </div>
+                    <div id="attack-types-chart" style="min-height: 200px; padding: 16px 0;">
+                        <div class="no-data">Loading attack statistics...</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Quick Actions</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <button class="btn" onclick="testMLServices()">Test ML Services</button>
+                        <button class="btn btn-success" onclick="startMonitor()">Start Monitor</button>
+                        <button class="btn btn-warning" onclick="openJuiceShop()">Open Juice Shop</button>
+                        <button class="btn" onclick="exportAttackLogs()">Export Logs</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Конфигурация
+        const API_BASE = 'http://localhost:8003';
+        let attacksOffset = 0;
+        const attacksLimit = 20;
+        let currentFilter = 'recent';
+
+        // Вспомогательные функции
+        function formatTime(timestamp) {
+            try {
+                const date = new Date(timestamp);
+                return date.toLocaleTimeString();
+            } catch (e) {
+                return timestamp;
+            }
+        }
+
+        function formatDateTime(timestamp) {
+            try {
+                const date = new Date(timestamp);
+                return date.toLocaleString();
+            } catch (e) {
+                return timestamp;
+            }
+        }
+
+        function getAttackBadgeClass(attackType) {
+            if (!attackType) return 'badge-unknown';
+
+            const type = attackType.toLowerCase();
+            if (type.includes('sql') || type === 'sqli') return 'badge-sqli';
+            if (type.includes('xss')) return 'badge-xss';
+            if (type.includes('lfi') || type.includes('path')) return 'badge-lfi';
+            if (type.includes('rce') || type.includes('command')) return 'badge-rce';
+            if (type.includes('error')) return 'badge-error';
+            if (type === 'normal') return 'badge-normal';
+            return 'badge-unknown';
+        }
+
+        function addEvent(message, type = 'info') {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString();
+            const eventLog = document.getElementById('event-log');
+
+            let borderColor = 'var(--accent-blue)';
+            if (type === 'error') borderColor = 'var(--accent-red)';
+            if (type === 'success') borderColor = 'var(--accent-green)';
+            if (type === 'warning') borderColor = 'var(--accent-yellow)';
+
+            const eventItem = document.createElement('div');
+            eventItem.className = 'event-item';
+            eventItem.style.borderLeftColor = borderColor;
+            eventItem.innerHTML = `
+                <div class="event-time">${timeStr}</div>
+                <div class="event-message">${message}</div>
+            `;
+
+            eventLog.insertBefore(eventItem, eventLog.firstChild);
+
+            // Ограничиваем количество событий
+            if (eventLog.children.length > 15) {
+                eventLog.removeChild(eventLog.lastChild);
+            }
+        }
+
+        // Основные функции
+        async function checkServices() {
+            const btn = document.getElementById('refresh-btn');
+            const spinner = document.getElementById('refresh-spinner');
+            const text = document.getElementById('refresh-text');
+
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+            text.textContent = 'Checking...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/services/status`);
+                const data = await response.json();
+
+                const servicesGrid = document.getElementById('services-grid');
+                servicesGrid.innerHTML = '';
+
+                let allOnline = true;
+
+                data.services.forEach(service => {
+                    const isOnline = service.status === 'online';
+                    if (!isOnline) allOnline = false;
+
+                    const statusClass = service.status === 'online' ? '' :
+                                      service.status === 'error' ? 'error' : 'offline';
+
+                    const serviceCard = document.createElement('div');
+                    serviceCard.className = `service-card ${service.name.toLowerCase().includes('isolation') ? 'isolation' :
+                                           service.name.toLowerCase().includes('random') ? 'random' : ''}`;
+
+                    let statusText = service.status;
+                    if (service.status === 'online') statusText = 'Online';
+                    else if (service.status === 'offline') statusText = 'Offline';
+                    else if (service.status === 'error') statusText = 'Error';
+
+                    serviceCard.innerHTML = `
+                        <div class="service-name">
+                            <span>${service.name}</span>
+                            <span class="service-status ${statusClass}">
+                                <span class="status-dot"></span>
+                                <span>${statusText}</span>
+                            </span>
+                        </div>
+                        <div style="color: var(--text-secondary); font-size: 13px;">
+                            Port: ${service.port}<br>
+                            Checked: ${formatTime(service.last_checked)}
+                        </div>
+                    `;
+
+                    servicesGrid.appendChild(serviceCard);
+                });
+
+                // Обновляем глобальный статус
+                const statusIndicator = document.getElementById('global-status-indicator');
+                const statusText = document.getElementById('system-status-text');
+
+                if (allOnline) {
+                    statusIndicator.style.background = 'var(--accent-green)';
+                    statusText.textContent = 'SYSTEM OPERATIONAL';
+                    statusText.style.color = 'var(--accent-green)';
+                    addEvent('All services are online', 'success');
+                } else {
+                    statusIndicator.style.background = 'var(--accent-yellow)';
+                    statusText.textContent = 'SYSTEM DEGRADED';
+                    statusText.style.color = 'var(--accent-yellow)';
+                    addEvent('Some services are offline', 'warning');
+                }
+
+            } catch (error) {
+                addEvent(`Error checking services: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                text.textContent = 'Refresh Status';
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/stats`);
+                const stats = await response.json();
+
+                document.getElementById('total-attacks').textContent = stats.total_attacks;
+                document.getElementById('detected-attacks').textContent = stats.detected_attacks;
+                document.getElementById('blocked-ips').textContent = stats.blocked_ips;
+
+                // Обновляем график распределения типов атак
+                updateAttackTypesChart(stats.attack_types || {});
+
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadAttacks(filter = 'recent') {
+            currentFilter = filter;
+            attacksOffset = 0;
+
+            const spinner = document.getElementById('load-attacks-spinner');
+            const btn = document.getElementById('load-attacks-btn');
+
+            spinner.style.display = 'inline-block';
+            btn.disabled = true;
+
+            try {
+                let url;
+                if (filter === 'today') {
+                    url = `${API_BASE}/api/attacks/today`;
+                } else if (filter === 'recent') {
+                    url = `${API_BASE}/api/attacks/recent?limit=${attacksLimit}`;
+                } else {
+                    url = `${API_BASE}/api/attacks/recent?limit=100`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                displayAttacks(data.attacks || []);
+                attacksOffset = (data.attacks || []).length;
+
+                if (data.attacks && data.attacks.length > 0) {
+                    addEvent(`Loaded ${data.attacks.length} attacks (${filter})`, 'success');
+                } else {
+                    addEvent('No attacks found in database', 'info');
+                }
+
+                document.getElementById('load-more-btn').style.display = 'none';
+
+            } catch (error) {
+                addEvent(`Error loading attacks: ${error.message}`, 'error');
+                displayAttacks([]);
+            } finally {
+                spinner.style.display = 'none';
+                btn.disabled = false;
+            }
+        }
+
+        async function loadMoreAttacks() {
+            if (currentFilter !== 'recent') return;
+
+            const btn = document.getElementById('load-more-btn');
+            btn.disabled = true;
+            btn.textContent = 'Loading...';
+
+            try {
+                const url = `${API_BASE}/api/attacks/recent?limit=${attacksLimit}&offset=${attacksOffset}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.attacks && data.attacks.length > 0) {
+                    appendAttacks(data.attacks);
+                    attacksOffset += data.attacks.length;
+                    addEvent(`Loaded ${data.attacks.length} more attacks`, 'info');
+                } else {
+                    btn.style.display = 'none';
+                    addEvent('No more attacks to load', 'info');
+                }
+
+            } catch (error) {
+                addEvent(`Error loading more attacks: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Load More';
+            }
+        }
+
+        function displayAttacks(attacks) {
+            const tableBody = document.getElementById('attacks-table-body');
+
+            if (!attacks || attacks.length === 0) {
+                tableBody.innerHTML = `
+                    <tr id="no-attacks-row">
+                        <td colspan="6" class="no-data">
+                            No attacks found in database<br>
+                            <small>Start the monitor to detect attacks</small>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tableBody.innerHTML = '';
+
+            attacks.forEach(attack => {
+                const row = document.createElement('tr');
+
+                // Форматируем результаты ML
+                const isoResult = attack.isolation_result || 'N/A';
+                const rfResult = attack.random_result || 'N/A';
+                const mlResults = `
+                    <div style="font-size: 11px; line-height: 1.3;">
+                        <strong>ISO:</strong> ${isoResult}<br>
+                        <strong>RF:</strong> ${rfResult}
+                    </div>
+                `;
+
+                row.innerHTML = `
+                    <td class="timestamp">${formatDateTime(attack.timestamp)}</td>
+                    <td><code>${attack.source_ip || 'Unknown'}</code></td>
+                    <td>
+                        <span class="attack-badge ${getAttackBadgeClass(attack.attack_type)}">
+                            ${(attack.attack_type || 'unknown').toUpperCase()}
+                        </span>
+                    </td>
+                    <td style="font-family: monospace; font-size: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
+                        ${attack.endpoint || 'Unknown'}
+                    </td>
+                    <td style="font-size: 11px; color: var(--text-secondary);">${mlResults}</td>
+                    <td>
+                        <button class="btn" style="padding: 4px 12px; font-size: 12px;"
+                                onclick="blockIP('${attack.source_ip || ''}')">Block IP</button>
+                    </td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+
+            if (currentFilter === 'recent' && attacks.length >= attacksLimit) {
+                document.getElementById('load-more-btn').style.display = 'block';
+            } else {
+                document.getElementById('load-more-btn').style.display = 'none';
+            }
+        }
+
+        function appendAttacks(attacks) {
+            const tableBody = document.getElementById('attacks-table-body');
+
+            attacks.forEach(attack => {
+                const row = document.createElement('tr');
+
+                const isoResult = attack.isolation_result || 'N/A';
+                const rfResult = attack.random_result || 'N/A';
+                const mlResults = `
+                    <div style="font-size: 11px; line-height: 1.3;">
+                        <strong>ISO:</strong> ${isoResult}<br>
+                        <strong>RF:</strong> ${rfResult}
+                    </div>
+                `;
+
+                row.innerHTML = `
+                    <td class="timestamp">${formatDateTime(attack.timestamp)}</td>
+                    <td><code>${attack.source_ip || 'Unknown'}</code></td>
+                    <td>
+                        <span class="attack-badge ${getAttackBadgeClass(attack.attack_type)}">
+                            ${(attack.attack_type || 'unknown').toUpperCase()}
+                        </span>
+                    </td>
+                    <td style="font-family: monospace; font-size: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
+                        ${attack.endpoint || 'Unknown'}
+                    </td>
+                    <td style="font-size: 11px; color: var(--text-secondary);">${mlResults}</td>
+                    <td>
+                        <button class="btn" style="padding: 4px 12px; font-size: 12px;"
+                                onclick="blockIP('${attack.source_ip || ''}')">Block IP</button>
+                    </td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updateAttackTypesChart(attacksByType) {
+            const chartContainer = document.getElementById('attack-types-chart');
+
+            if (!attacksByType || Object.keys(attacksByType).length === 0) {
+                chartContainer.innerHTML = `
+                    <div class="no-data" style="padding: 20px;">
+                        No attack data available<br>
+                        <small>Start monitoring to collect data</small>
+                    </div>
+                `;
+                return;
+            }
+
+            let total = Object.values(attacksByType).reduce((a, b) => a + b, 0);
+            let html = '';
+
+            for (const [type, count] of Object.entries(attacksByType)) {
+                const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+                const barWidth = Math.max(10, percentage * 2);
+
+                html += `
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span class="attack-badge ${getAttackBadgeClass(type)}" style="min-width: 70px; text-align: center;">
+                            ${type.toUpperCase()}
+                        </span>
+                        <div style="flex-grow: 1; background: var(--bg-card-light); border-radius: 4px; overflow: hidden;">
+                            <div style="width: ${barWidth}%; height: 8px; background: var(--accent-blue);"></div>
+                        </div>
+                        <span style="font-size: 12px; color: var(--text-secondary); min-width: 50px; text-align: right;">
+                            ${count} (${percentage}%)
+                        </span>
+                    </div>
+                `;
+            }
+
+            chartContainer.innerHTML = html;
+        }
+
+        async function blockIP(ip) {
+            if (!ip || ip === 'Unknown') {
+                alert('No IP address to block');
+                return;
+            }
+
+            if (confirm(`Block IP address ${ip}?`)) {
+                addEvent(`IP ${ip} blocked (simulated)`, 'warning');
+
+                // Обновляем счетчик заблокированных IP
+                const blockedElement = document.getElementById('blocked-ips');
+                blockedElement.textContent = parseInt(blockedElement.textContent) + 1;
+            }
+        }
+
+        async function clearAllAttacks() {
+            if (confirm('Are you sure you want to delete ALL attack records from the database?')) {
+                const btn = document.getElementById('clear-btn');
+                btn.disabled = true;
+                btn.textContent = 'Clearing...';
+
+                try {
+                    const response = await fetch(`${API_BASE}/api/attacks`, {
+                        method: 'DELETE'
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        addEvent('All attacks deleted from database', 'warning');
+                        loadAttacks(currentFilter);
+                        loadStats();
+                    } else {
+                        addEvent(`Error: ${result.message}`, 'error');
+                    }
+
+                } catch (error) {
+                    addEvent(`Error clearing database: ${error.message}`, 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Clear Database';
+                }
+            }
+        }
+
+        function clearEvents() {
+            const eventLog = document.getElementById('event-log');
+            const firstItem = eventLog.firstElementChild;
+
+            eventLog.innerHTML = '';
+            if (firstItem) {
+                eventLog.appendChild(firstItem);
+            }
+
+            addEvent('Event log cleared', 'info');
+        }
+
+        async function testMLServices() {
+            addEvent('Testing ML services...', 'info');
+
+            try {
+                // Тестируем Isolation Forest
+                const isoTest = await fetch('http://localhost:8001/health');
+                const isoStatus = await isoTest.json();
+
+                // Тестируем Random Forest
+                const rfTest = await fetch('http://localhost:8002/health');
+                const rfStatus = await rfTest.json();
+
+                addEvent(`Isolation Forest: ${isoStatus.status}`, isoStatus.status === 'healthy' ? 'success' : 'error');
+                addEvent(`Random Forest: ${rfStatus.status}`, rfStatus.status === 'healthy' ? 'success' : 'error');
+
+            } catch (error) {
+                addEvent(`Error testing services: ${error.message}`, 'error');
+            }
+        }
+
+        function startMonitor() {
+            addEvent('Starting monitor... Check terminal for monitor output', 'info');
+            alert('To start the monitor:\n\n1. Open a new terminal\n2. Run: python monitor_juice_improved.py\n\nThis will start detecting attacks from Juice Shop.');
+        }
+
+        function openJuiceShop() {
+            window.open('http://localhost:3001', '_blank');
+            addEvent('Juice Shop opened in new tab', 'info');
+        }
+
+        async function exportAttackLogs() {
+            try {
+                const response = await fetch(`${API_BASE}/api/attacks/recent?limit=1000`);
+                const data = await response.json();
+
+                const exportData = {
+                    exported_at: new Date().toISOString(),
+                    total_attacks: data.attacks.length,
+                    attacks: data.attacks
+                };
+
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `orchid-attacks-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                addEvent('Attack logs exported to JSON', 'success');
+
+            } catch (error) {
+                addEvent(`Error exporting logs: ${error.message}`, 'error');
+            }
+        }
+
+        // Инициализация
+        function initDashboard() {
+            // Обновление времени
+            function updateTime() {
+                const now = new Date();
+                document.getElementById('current-time').textContent = now.toLocaleTimeString();
+                document.getElementById('start-time').textContent = now.toLocaleTimeString();
+            }
+
+            updateTime();
+            setInterval(updateTime, 1000);
+
+            // Начальная загрузка
+            checkServices();
+            loadStats();
+            loadAttacks();
+
+            // Автоматическое обновление
+            setInterval(() => {
+                checkServices();
+                loadStats();
+            }, 30000); // Каждые 30 секунд
+
+            addEvent('Dashboard initialized with real data', 'success');
+        }
+
+        // Запускаем при загрузке страницы
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>
