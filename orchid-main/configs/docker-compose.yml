@@ -1,0 +1,80 @@
+services:
+  # ML Isolation Forest
+  ml-isolation:
+    build: ./ml-core
+    container_name: orchid-ml-isolation
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./ml-core:/app
+      - ./ml-core/models:/app/models
+    working_dir: /app
+    command: ["python", "-m", "uvicorn", "service_isolation:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      - PYTHONPATH=/app
+    restart: unless-stopped
+    networks:
+      - orchid-network
+
+  # ML Random Forest
+  ml-random:
+    build: ./ml-core
+    container_name: orchid-ml-random
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./ml-core:/app
+      - ./ml-core/models:/app/models
+    working_dir: /app
+    command: ["python", "-m", "uvicorn", "service_random:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      - PYTHONPATH=/app
+    restart: unless-stopped
+    networks:
+      - orchid-network
+
+  # Admin Backend API
+  admin-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.admin
+    container_name: orchid-admin-backend
+    ports:
+      - "8003:8003"
+    volumes:
+      - .:/app
+    working_dir: /app
+    restart: unless-stopped
+    networks:
+      - orchid-network
+    # Установим curl при сборке
+    image: admin-backend-with-curl
+
+  # Admin Interface
+  admin:
+    image: nginx:alpine
+    container_name: orchid-admin
+    ports:
+      - "3000:80"
+    volumes:
+      - ./admin/html:/usr/share/nginx/html
+    restart: unless-stopped
+    networks:
+      - orchid-network
+
+  # Juice Shop
+  juice-shop:
+    image: bkimminich/juice-shop:latest
+    container_name: orchid-juice-shop
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped
+    networks:
+      - orchid-network
+
+networks:
+  orchid-network:
+    driver: bridge
+    name: orchid-system_final_orchid-network  # Явное указание имени сети
