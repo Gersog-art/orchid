@@ -13,7 +13,7 @@ NC='\033[0m' # No Color
 # Функции
 usage() {
     echo -e "${BLUE}Orchid Security System Management${NC}"
-    echo "Usage: $0 {start|stop|restart|status|logs|init|backup|restore|monitor|sniffer|analyzer|train|update|help}"
+    echo "Usage: $0 {start|stop|restart|status|logs|init|backup|restore|monitor|sniffer|analyzer|train|help}"
     echo ""
     echo "  start       Запустить все сервисы (docker + фоновые процессы)"
     echo "  stop        Остановить все сервисы"
@@ -27,7 +27,6 @@ usage() {
     echo "  sniffer     Запустить/остановить сниффер"
     echo "  analyzer    Запустить/остановить анализатор эксплойтов"
     echo "  train       Переобучить ML модели"
-    echo "  update      Обновить код из репозитория и пересобрать"
     echo "  help        Показать эту справку"
     echo ""
     echo "Пример: $0 start"
@@ -118,23 +117,40 @@ backup() {
     local backup_dir="backups/$(date +%Y%m%d_%H%M%S)"
     mkdir -p "$backup_dir"
     echo -e "${BLUE}Создание резервной копии в $backup_dir...${NC}"
-    cp data/attacks.db "$backup_dir/" 2>/dev/null || echo -e "${YELLOW}БД не найдена.${NC}"
-    cp -r logs "$backup_dir/" 2>/dev/null
-    cp -r data/logs "$backup_dir/" 2>/dev/null
-    echo -e "${GREEN}Резервная копия создана.${NC}"
+    if [ -f data/attacks.db ]; then
+        cp data/attacks.db "$backup_dir/"
+        echo -e "${GREEN}БД скопирована.${NC}"
+    else
+        echo -e "${YELLOW}БД не найдена, пропускаем.${NC}"
+    fi
+    if [ -d logs ]; then
+        cp -r logs "$backup_dir/"
+        echo -e "${GREEN}Логи скопированы.${NC}"
+    fi
+    if [ -d data/logs ]; then
+        cp -r data/logs "$backup_dir/"
+        echo -e "${GREEN}Логи из data скопированы.${NC}"
+    fi
+    echo -e "${GREEN}Резервная копия создана в $backup_dir.${NC}"
 }
 
 # Восстановление из последнего бэкапа
 restore() {
-    local latest=$(ls -td backups/*/ | head -1)
+    local latest=$(ls -td backups/*/ 2>/dev/null | head -1)
     if [ -z "$latest" ]; then
-        echo -e "${RED}Нет резервных копий.${NC}"
+        echo -e "${RED}Нет резервных копий в папке backups/.${NC}"
         exit 1
     fi
     echo -e "${BLUE}Восстановление из $latest...${NC}"
-    cp "$latest/attacks.db" data/ 2>/dev/null || echo -e "${YELLOW}БД не найдена в бэкапе.${NC}"
-    cp -r "$latest/logs" . 2>/dev/null
-    cp -r "$latest/logs" data/ 2>/dev/null
+    if [ -f "$latest/attacks.db" ]; then
+        cp "$latest/attacks.db" data/ 2>/dev/null && echo -e "${GREEN}БД восстановлена.${NC}" || echo -e "${RED}Ошибка восстановления БД.${NC}"
+    fi
+    if [ -d "$latest/logs" ]; then
+        cp -r "$latest/logs" . 2>/dev/null && echo -e "${GREEN}Логи восстановлены.${NC}"
+    fi
+    if [ -d "$latest/logs" ]; then
+        cp -r "$latest/logs" data/ 2>/dev/null && echo -e "${GREEN}Логи в data восстановлены.${NC}"
+    fi
     echo -e "${GREEN}Восстановление завершено.${NC}"
 }
 
@@ -142,28 +158,20 @@ restore() {
 train_models() {
     echo -e "${BLUE}Переобучение ML моделей...${NC}"
     cd ml-core
-    python prepare_training_data.py
-    python merge_datasets.py
-    python train_real_models.py
-    cp models/*.joblib ../data/models/
+    python prepare_training_data.py || echo -e "${RED}Ошибка prepare_training_data.py${NC}"
+    python merge_datasets.py || echo -e "${RED}Ошибка merge_datasets.py${NC}"
+    python train_real_models.py || echo -e "${RED}Ошибка train_real_models.py${NC}"
+    if [ -f models/random_forest_real.joblib ]; then
+        cp models/*.joblib ../data/models/ 2>/dev/null && echo -e "${GREEN}Модели скопированы в data/models.${NC}"
+    fi
     cd ..
-    echo -e "${GREEN}Модели переобучены и скопированы.${NC}"
-}
-
-# Обновление кода из git и пересборка
-update_code() {
-    echo -e "${BLUE}Обновление кода из репозитория...${NC}"
-    git pull
-    echo -e "${GREEN}Код обновлен. Пересборка Docker образов...${NC}"
-    docker-compose build
-    echo -e "${GREEN}Пересборка завершена.${NC}"
+    echo -e "${GREEN}Процесс обучения завершён (проверьте вывод выше на ошибки).${NC}"
 }
 
 # Главная логика
 case "$1" in
     start)
         docker_up
-        # Запуск дополнительных процессов, если они не запущены
         run_python_script "Монитор" "async_monitor.py"
         run_python_script "Сниффер" "traffic_sniffer.py"
         run_python_script "Анализатор" "exploit_analyzer.py"
@@ -199,7 +207,12 @@ case "$1" in
                 esac
                 if is_running "$script"; then
                     echo -e "${YELLOW}Логи $2 (Ctrl+C для выхода):${NC}"
-                    tail -f scripts/$script.log 2>/dev/null || echo -e "${RED}Файл лога не найден.${NC}"
+                    # Ищем файл лога (если скрипт перенаправляет вывод)
+                    if [ -f "scripts/$script.log" ]; then
+                        tail -f "scripts/$script.log"
+                    else
+                        echo -e "${RED}Файл лога не найден. Попробуйте: tail -f nohup.out${NC}"
+                    fi
                 else
                     echo -e "${RED}$2 не запущен.${NC}"
                 fi
@@ -246,9 +259,6 @@ case "$1" in
         ;;
     train)
         train_models
-        ;;
-    update)
-        update_code
         ;;
     help|*)
         usage
