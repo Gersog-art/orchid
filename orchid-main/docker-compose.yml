@@ -1,0 +1,102 @@
+services:
+  # ML Isolation Forest
+  ml-isolation:
+    build: ./ml-core
+    container_name: orchid-ml-isolation
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./ml-core:/app
+      - ./data/models:/app/models
+    working_dir: /app
+    command: ["python", "-m", "uvicorn", "service_isolation:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      - PYTHONPATH=/app
+    restart: unless-stopped
+    networks:
+      - orchid-network
+
+  # ML Random Forest
+  ml-random:
+    build: ./ml-core
+    container_name: orchid-ml-random
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./ml-core:/app
+      - ./data/models:/app/models
+    working_dir: /app
+    command: ["python", "-m", "uvicorn", "service_random:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      - PYTHONPATH=/app
+    restart: unless-stopped
+    networks:
+      - orchid-network
+
+  # Admin Backend API
+  admin-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.admin
+    container_name: orchid-admin-backend
+    ports:
+      - "8003:8003"
+    volumes:
+      - ./data:/app/data           # монтируем папку с базой данных
+      - .:/app                      # для разработки (можно убрать)
+    working_dir: /app
+    restart: unless-stopped
+    networks:
+      - orchid-network
+    cap_add:
+      - NET_ADMIN                    # разрешаем iptables внутри контейнера
+
+  # Admin Interface (nginx)
+  admin:
+    image: nginx:alpine
+    container_name: orchid-admin
+    ports:
+      - "3000:80"
+    volumes:
+      - ./admin/html:/usr/share/nginx/html
+    restart: unless-stopped
+    networks:
+      - orchid-network
+
+  # Juice Shop
+  juice-shop:
+    image: bkimminich/juice-shop:latest
+    container_name: orchid-juice-shop
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped
+    networks:
+      - orchid-network
+
+  # Traffic Sniffer (реальный захват трафика)
+  traffic-sniffer:
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile.sniffer
+    container_name: orchid-sniffer
+    network_mode: host                # необходим для захвата пакетов
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ./data:/app/data              # для записи в БД
+      - ./ml-core/models:/app/models   # опционально, если понадобятся модели
+    environment:
+      - INTERFACE=any                  # можно изменить на eth0/wlan0
+    restart: unless-stopped
+    depends_on:
+      - ml-isolation
+      - ml-random
+      - admin-backend
+
+networks:
+  orchid-network:
+    driver: bridge
+    name: orchid-system_final_orchid-network

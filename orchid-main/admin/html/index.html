@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orchid — Security Dashboard</title>
+    <!-- Font Awesome для иконок -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* ===== ПОЛНОСТЬЮ НОВЫЙ ДИЗАЙН ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Poppins', system-ui, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(ellipse at 30% 40%, #1a0e1f 0%, #0b0710 100%);
+            color: #f0e9e0;
+            padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
+            transition: background-color 0.3s;
+        }
+
+        /* Анимированные лепестки */
+        .petal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .petal {
+            position: absolute;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 215, 150, 0.4), rgba(200, 120, 200, 0.2));
+            border-radius: 80% 20% 70% 30% / 30% 60% 40% 70%;
+            width: 40px;
+            height: 40px;
+            opacity: 0.5;
+            filter: blur(8px);
+            animation: floatPetals 20s infinite linear;
+            transform-origin: center;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        @keyframes floatPetals {
+            0% { transform: translateY(100vh) rotate(0deg) scale(0.8); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-20vh) rotate(360deg) scale(1.2); opacity: 0; }
+        }
+
+        .petal:nth-child(1) { left: 10%; animation-duration: 18s; }
+        .petal:nth-child(2) { left: 30%; animation-duration: 22s; width: 60px; height: 60px; }
+        .petal:nth-child(3) { left: 50%; animation-duration: 25s; width: 30px; height: 30px; }
+        .petal:nth-child(4) { left: 70%; animation-duration: 20s; }
+        .petal:nth-child(5) { left: 90%; animation-duration: 30s; width: 50px; height: 50px; }
+        .petal:nth-child(6) { left: 20%; animation-duration: 24s; }
+        .petal:nth-child(7) { left: 80%; animation-duration: 28s; width: 45px; height: 45px; }
+        .petal:nth-child(8) { left: 40%; animation-duration: 26s; }
+        .petal:nth-child(9) { left: 60%; animation-duration: 32s; }
+        .petal:nth-child(10) { left: 95%; animation-duration: 21s; }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Шапка */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem 2rem;
+            background: rgba(20, 10, 25, 0.5);
+            backdrop-filter: blur(12px);
+            border-radius: 60px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 30px rgba(200,120,200,0.3);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffd966;
+            text-shadow: 0 0 15px rgba(255,215,0,0.8);
+            letter-spacing: 2px;
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+            filter: drop-shadow(0 0 10px gold);
+            animation: gentlePulse 3s infinite;
+        }
+
+        @keyframes gentlePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(8px);
+            padding: 8px 25px;
+            border-radius: 40px;
+            border: 1px solid rgba(255,215,0,0.5);
+            color: #ffefd5;
+        }
+
+        .status-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #ffd700;
+            box-shadow: 0 0 15px #ffd700;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        #current-time {
+            font-family: monospace;
+            background: rgba(255,215,0,0.2);
+            color: #ffd700;
+            padding: 5px 15px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,215,0,0.5);
+        }
+
+        #sound-toggle, #theme-toggle {
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: 0.2s;
+        }
+        #sound-toggle:hover, #theme-toggle:hover { transform: scale(1.1); text-shadow: 0 0 10px gold; }
+
+        /* Сетка */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+        }
+
+        /* Карточки */
+        .card {
+            background: rgba(20, 12, 28, 0.6);
+            backdrop-filter: blur(16px);
+            border-radius: 32px;
+            padding: 24px;
+            border: 1px solid rgba(255,215,0,0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(200,130,200,0.2) inset;
+            transition: 0.3s;
+            margin-bottom: 24px;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 50px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,215,0,0.4) inset, 0 0 40px rgba(255,200,0,0.4);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffebc0;
+            text-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+
+        .card-subtitle {
+            font-size: 0.9rem;
+            color: #b8a9d4;
+            margin-top: 4px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(2,1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .service-card {
+            background: rgba(40,25,50,0.7);
+            border-radius: 20px;
+            padding: 18px;
+            border-left: 6px solid #ffd966;
+            transition: 0.2s;
+        }
+        .service-card:hover { background: rgba(60,35,70,0.8); }
+
+        .service-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .service-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            padding: 4px 12px;
+            background: rgba(255,215,0,0.15);
+            color: #ffdb8e;
+            border-radius: 30px;
+        }
+        .service-status.offline { background: rgba(200,50,50,0.2); color: #ffa07a; }
+
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+        /* Статистика (6 карточек) */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(4px);
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+            border-bottom: 3px solid #d4af37;
+        }
+        .stat-card:hover { background: rgba(0,0,0,0.5); border-bottom-color: #ffd700; }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffd966;
+            text-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            color: #c0b0d0;
+            text-transform: uppercase;
+        }
+
+        /* Таблицы */
+        .attacks-table, .blocked-table, .exploits-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .attacks-table th, .blocked-table th, .exploits-table th {
+            text-align: left;
+            padding: 14px 12px;
+            background: rgba(212,175,55,0.15);
+            color: #ffd966;
+            border-bottom: 2px solid #d4af37;
+        }
+
+        .attacks-table td, .blocked-table td, .exploits-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(212,175,55,0.3);
+        }
+
+        .attacks-table tr:hover td, .blocked-table tr:hover td, .exploits-table tr:hover td {
+            background: rgba(255,215,0,0.05);
+        }
+
+        .attack-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid currentColor;
+            box-shadow: 0 0 10px currentColor;
+            min-width: 85px;
+            text-align: center;
+        }
+        .badge-sqli { color: #ff7b7b; border-color: #ff4d4d; }
+        .badge-xss { color: #ffae6a; border-color: #ff8c42; }
+        .badge-lfi { color: #ffd966; border-color: #e6b800; }
+        .badge-rce { color: #b57bee; border-color: #9f4fdf; }
+        .badge-error_based { color: #f9a95d; border-color: #f57c00; }
+        .badge-unknown_anomaly { color: #b0b0b0; border-color: #7e7e7e; }
+        .badge-normal { color: #6fda6f; border-color: #2e8b57; }
+        .badge-brute { color: #f7c46e; border-color: #e6a017; }
+        .badge-xxe { color: #c97ef0; border-color: #b45af0; }
+        .badge-ssrf { color: #f7a35c; border-color: #f28c38; }
+        .badge-cmd_inject { color: #ff8a8a; border-color: #ff4d4d; }
+
+        .btn {
+            background: rgba(212,175,55,0.2);
+            border: 1px solid #d4af37;
+            color: #ffd966;
+            font-weight: 600;
+            padding: 10px 24px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.2s;
+            backdrop-filter: blur(4px);
+        }
+        .btn:hover {
+            background: rgba(212,175,55,0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(212,175,55,0.4);
+        }
+        .btn-danger {
+            background: rgba(200,50,50,0.2);
+            border-color: #ff6b6b;
+            color: #ffa7a7;
+        }
+        .btn-danger:hover { background: rgba(200,50,50,0.4); }
+        .btn-success {
+            background: rgba(50,200,50,0.2);
+            border-color: #6fda6f;
+            color: #b0ffb0;
+        }
+        .btn-sm { padding: 6px 16px; font-size: 0.8rem; }
+
+        .tabs {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .tab {
+            padding: 10px 30px;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(8px);
+            border-radius: 40px;
+            border: 1px solid rgba(255,215,0,0.3);
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .tab.active {
+            background: rgba(212,175,55,0.3);
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255,215,0,0.5);
+            color: #ffd700;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .filter-select {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #d4af37;
+            border-radius: 40px;
+            padding: 8px 16px;
+            color: #ffefd5;
+            outline: none;
+            backdrop-filter: blur(4px);
+        }
+
+        .event-log {
+            max-height: 400px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            padding: 12px;
+        }
+        .event-item {
+            background: rgba(255,255,255,0.02);
+            border-left: 4px solid #d4af37;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+        }
+        .event-time { font-size: 0.75rem; color: #c0b0d0; }
+        .event-message { font-weight: 500; }
+
+        .chart-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .chart-bar {
+            flex: 1;
+            height: 24px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 30px;
+            overflow: hidden;
+        }
+        .chart-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #d4af37, #ffd966);
+            border-radius: 30px;
+            box-shadow: 0 0 10px #ffd700;
+        }
+
+        .info-icon {
+            cursor: pointer;
+            color: #d4af37;
+            font-size: 1.2rem;
+            margin-left: 5px;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #b8a9d4;
+            font-style: italic;
+        }
+
+        body.dark-theme {
+            background: radial-gradient(ellipse at 30% 40%, #0f0a14 0%, #060308 100%);
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 800px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="petal-container">
+        <div class="petal"></div><div class="petal"></div><div class="petal"></div><div class="petal"></div><div class="petal"></div>
+        <div class="petal"></div><div class="petal"></div><div class="petal"></div><div class="petal"></div><div class="petal"></div>
+    </div>
+
+    <div class="container">
+        <!-- Шапка -->
+        <div class="header">
+            <div class="logo">
+                <span class="logo-icon"><i class="fas fa-seedling"></i></span>
+                <span>ORCHID</span>
+            </div>
+            <div class="system-status">
+                <div class="status-indicator" id="global-status-indicator"></div>
+                <span id="system-status-text">OPERATIONAL</span>
+                <span id="current-time"></span>
+                <span id="sound-toggle"><i class="fas fa-volume-mute"></i></span>
+                <span id="theme-toggle"><i class="fas fa-moon"></i></span>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Левый блок -->
+            <div class="main-panel">
+                <!-- ML Services + Статистика -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">ML Services</div>
+                            <div class="card-subtitle">Real‑time health & metrics</div>
+                        </div>
+                        <button class="btn btn-sm" onclick="checkServices()" id="refresh-btn">
+                            <span id="refresh-text"><i class="fas fa-sync-alt"></i> Refresh</span>
+                            <span id="refresh-spinner" class="loading" style="display:none;"></span>
+                        </button>
+                    </div>
+                    <div class="services-grid" id="services-grid">
+                        <div class="no-data">Loading services…</div>
+                    </div>
+                    <!-- 6 метрик -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-attacks">0</div>
+                            <div class="stat-label">Total Attacks</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="detected-attacks">0</div>
+                            <div class="stat-label">Detected</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="blocked-ips">0</div>
+                            <div class="stat-label">Blocked IPs</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="exploits-count">0</div>
+                            <div class="stat-label">Exploits</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="avg-confidence">0%</div>
+                            <div class="stat-label">Avg Confidence</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="top-attacker">-</div>
+                            <div class="stat-label">Top Attacker</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Табы -->
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('attacks')" id="tab-attacks"><i class="fas fa-bolt"></i> Live Attacks</div>
+                    <div class="tab" onclick="switchTab('exploits')" id="tab-exploits"><i class="fas fa-skull-crossbones"></i> Exploits</div>
+                </div>
+
+                <!-- Live Attacks -->
+                <div id="attacks-panel">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Live Attacks</div>
+                                <div class="card-subtitle">Detected by ML ensemble</div>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-sm btn-danger" onclick="clearAllAttacks()" id="clear-btn"><i class="fas fa-trash-alt"></i> Clear DB</button>
+                                <button class="btn btn-sm" onclick="loadAttacks()" id="load-attacks-btn">
+                                    <span><i class="fas fa-redo-alt"></i> Reload</span>
+                                    <span class="loading" id="load-attacks-spinner" style="display:none;"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="filter-bar">
+                            <span>Filter:</span>
+                            <select class="filter-select" id="attack-type-filter" onchange="filterAttacks()">
+                                <option value="all">All</option>
+                                <option value="sqli">SQLi</option>
+                                <option value="xss">XSS</option>
+                                <option value="lfi">LFI</option>
+                                <option value="rce">RCE</option>
+                                <option value="brute">Brute</option>
+                                <option value="xxe">XXE</option>
+                                <option value="ssrf">SSRF</option>
+                                <option value="cmd_inject">CMD Inject</option>
+                                <option value="normal">Normal</option>
+                                <option value="unknown_anomaly">Unknown</option>
+                            </select>
+                            <button class="btn btn-sm" onclick="loadAttacks('today')">Today</button>
+                            <button class="btn btn-sm" onclick="loadAttacks('recent')">Recent (20)</button>
+                            <button class="btn btn-sm" onclick="loadAttacks('all')">All</button>
+                            <button class="btn btn-sm" onclick="toggleAutoRefresh()" id="auto-refresh-btn"><i class="fas fa-play"></i> Auto-refresh</button>
+                        </div>
+
+                        <div style="overflow-x: auto;">
+                            <table class="attacks-table">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>IP</th>
+                                        <th>Type</th>
+                                        <th>Endpoint</th>
+                                        <th>ML (ISO/RF)</th>
+                                        <th>Conf.</th>
+                                        <th>Payload</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="attacks-table-body">
+                                    <tr><td colspan="8" class="no-data"><div class="loading"></div> Loading attacks…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style="margin-top: 16px; text-align: center;">
+                            <button class="btn btn-sm" id="load-more-btn" style="display:none;" onclick="loadMoreAttacks()">Load More</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exploits Panel -->
+                <div id="exploits-panel" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Exploit Chains</div>
+                                <div class="card-subtitle">Post‑exploitation activity</div>
+                            </div>
+                            <button class="btn btn-sm" onclick="loadExploits()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table class="exploits-table">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>IP</th>
+                                        <th>Rule</th>
+                                        <th>Description</th>
+                                        <th>Trigger → Follow-up</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="exploits-table-body">
+                                    <tr><td colspan="5" class="no-data"><div class="loading"></div> Loading exploits…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Правая колонка -->
+            <div class="right-panel">
+                <!-- Event Log -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-history"></i> Event Log</div>
+                        <button class="btn btn-sm" onclick="clearEvents()">Clear</button>
+                    </div>
+                    <div class="event-log" id="event-log">
+                        <div class="event-item"><div class="event-time">startup</div><div class="event-message">Dashboard initialized</div></div>
+                    </div>
+                </div>
+
+                <!-- Attack Distribution -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-chart-pie"></i> Attack Distribution</div>
+                    </div>
+                    <div id="attack-types-chart" style="padding: 8px 0;">
+                        <div class="no-data">No data yet</div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-cogs"></i> Quick Actions</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <button class="btn" onclick="testMLServices()"><i class="fas fa-flask"></i> Test ML Services</button>
+                        <button class="btn" onclick="startMonitor()"><i class="fas fa-play-circle"></i> Start Monitor</button>
+                        <button class="btn" onclick="openJuiceShop()"><i class="fas fa-store"></i> Open Juice Shop</button>
+                        <button class="btn" onclick="exportLogs()"><i class="fas fa-download"></i> Export CSV</button>
+                        <button class="btn" onclick="toggleBlockedCard()"><i class="fas fa-ban"></i> Manage Blocked IPs</button>
+                    </div>
+                </div>
+
+                <!-- Blocked IPs (hidden by default) -->
+                <div class="card" id="blocked-ips-card" style="display: none;">
+                    <div class="card-header">
+                        <div class="card-title">Blocked IPs</div>
+                        <button class="btn btn-sm" onclick="loadBlockedIPs()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="blocked-table">
+                            <thead>
+                                <tr><th>IP</th><th>Time</th><th>Reason</th><th>Action</th></tr>
+                            </thead>
+                            <tbody id="blocked-table-body">
+                                <tr><td colspan="4" class="no-data">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ---------- ПОЛНОСТЬЮ РАБОЧИЙ СКРИПТ (на основе предыдущего стабильного) ----------
+        const API_BASE = 'http://localhost:8003';
+        let attacksOffset = 0;
+        const attacksLimit = 20;
+        let currentFilter = 'recent';
+        let blockedIPsSet = new Set();
+        let allAttacks = [];
+
+        let autoRefreshInterval = null;
+        let autoRefreshEnabled = false;
+
+        // Звук и тема
+        let soundEnabled = false;
+        let audioCtx = null;
+        let darkTheme = localStorage.getItem('darkTheme') === 'true';
+
+        // ---------- Вспомогательные функции ----------
+        function formatTime(timestamp) {
+            try { return new Date(timestamp).toLocaleTimeString(); } catch { return timestamp; }
+        }
+        function formatDateTime(timestamp) {
+            try { return new Date(timestamp).toLocaleString(); } catch { return timestamp; }
+        }
+        function getAttackBadgeClass(attackType) {
+            if (!attackType) return 'badge-unknown_anomaly';
+            const t = attackType.toLowerCase();
+            if (t.includes('sql')) return 'badge-sqli';
+            if (t.includes('xss')) return 'badge-xss';
+            if (t.includes('lfi')) return 'badge-lfi';
+            if (t.includes('rce')) return 'badge-rce';
+            if (t.includes('error')) return 'badge-error_based';
+            if (t === 'normal') return 'badge-normal';
+            if (t === 'unknown_anomaly') return 'badge-unknown_anomaly';
+            if (t === 'brute') return 'badge-brute';
+            if (t === 'xxe') return 'badge-xxe';
+            if (t === 'ssrf') return 'badge-ssrf';
+            if (t === 'cmd_inject') return 'badge-cmd_inject';
+            return 'badge-unknown_anomaly';
+        }
+
+        function addEvent(message, type = 'info') {
+            const log = document.getElementById('event-log');
+            const time = new Date().toLocaleTimeString();
+            const item = document.createElement('div');
+            item.className = 'event-item';
+            item.style.borderLeftColor = type === 'error' ? '#b33c3c' : (type === 'success' ? '#2f855a' : '#d4af37');
+            item.innerHTML = `<div class="event-time">${time}</div><div class="event-message">${message}</div>`;
+            log.insertBefore(item, log.firstChild);
+            if (log.children.length > 20) log.removeChild(log.lastChild);
+        }
+
+        function playMeow() {
+            if (!soundEnabled) return;
+            try {
+                const audio = new Audio('cat.mp3');
+                audio.volume = 0.3;
+                audio.play().catch(e => {
+                    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const now = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    gain.gain.setValueAtTime(0.1, now);
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.setValueAtTime(400, now + 0.1);
+                    gain.gain.setValueAtTime(0, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                });
+            } catch (e) {}
+        }
+
+        function flashRed() {
+            document.body.classList.add('attack-flash');
+            setTimeout(() => document.body.classList.remove('attack-flash'), 300);
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-toggle').innerHTML = soundEnabled ? '<i class="fas fa-volume-up"></i>' : '<i class="fas fa-volume-mute"></i>';
+            addEvent(`Sound ${soundEnabled ? 'enabled' : 'disabled'}`, 'info');
+        }
+
+        function toggleTheme() {
+            darkTheme = !darkTheme;
+            localStorage.setItem('darkTheme', darkTheme);
+            document.body.classList.toggle('dark-theme', darkTheme);
+            document.getElementById('theme-toggle').innerHTML = darkTheme ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            addEvent(`Theme switched to ${darkTheme ? 'dark' : 'light'}`, 'info');
+        }
+
+        // ---------- API вызовы ----------
+        async function checkServices() {
+            const btn = document.getElementById('refresh-btn');
+            const spinner = document.getElementById('refresh-spinner');
+            const text = document.getElementById('refresh-text');
+            btn.disabled = true; spinner.style.display = 'inline-block'; text.innerHTML = '<i class="fas fa-sync-alt"></i> Checking…';
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/services/status`);
+                const data = await resp.json();
+                const grid = document.getElementById('services-grid');
+                grid.innerHTML = '';
+                let allOnline = true;
+
+                data.services.forEach(s => {
+                    const online = s.status === 'online';
+                    if (!online) allOnline = false;
+                    const card = document.createElement('div');
+                    card.className = `service-card`;
+                    card.innerHTML = `
+                        <div class="service-name">
+                            <span>${s.name}</span>
+                            <span class="service-status ${online ? '' : 'offline'}">
+                                <span class="status-dot"></span> ${online ? 'Online' : 'Offline'}
+                            </span>
+                        </div>
+                        <div style="color: #b8a9d4; font-size:0.85rem;">port ${s.port}<br>${formatTime(s.last_checked)}</div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                const indicator = document.getElementById('global-status-indicator');
+                const statusText = document.getElementById('system-status-text');
+                if (allOnline) {
+                    indicator.style.background = '#ffd700';
+                    statusText.innerText = 'OPERATIONAL';
+                    addEvent('All services online', 'success');
+                } else {
+                    indicator.style.background = '#b33c3c';
+                    statusText.innerText = 'DEGRADED';
+                    addEvent('Some services offline', 'error');
+                }
+            } catch (e) {
+                addEvent('Error checking services: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false; spinner.style.display = 'none'; text.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const resp = await fetch(`${API_BASE}/api/stats`);
+                const stats = await resp.json();
+                document.getElementById('total-attacks').innerText = stats.total_attacks || 0;
+                document.getElementById('detected-attacks').innerText = stats.detected_attacks || 0;
+                document.getElementById('blocked-ips').innerText = stats.blocked_count || 0;
+            } catch (e) { console.warn('loadStats error', e); }
+        }
+
+        async function loadBlockedSet() {
+            try {
+                const resp = await fetch(`${API_BASE}/api/blocked`);
+                const data = await resp.json();
+                if (data.success) {
+                    blockedIPsSet = new Set(data.blocked.map(b => b.ip));
+                } else {
+                    blockedIPsSet.clear();
+                }
+            } catch (e) {
+                console.warn('Failed to load blocked IPs', e);
+                blockedIPsSet.clear();
+            }
+        }
+
+        async function loadBlockedIPs() {
+            const card = document.getElementById('blocked-ips-card');
+            card.style.display = 'block';
+            const tbody = document.getElementById('blocked-table-body');
+            tbody.innerHTML = '<tr><td colspan="4" class="no-data"><div class="loading"></div> Loading...</td></tr>';
+            try {
+                const resp = await fetch(`${API_BASE}/api/blocked`);
+                const data = await resp.json();
+                if (data.success && data.blocked.length > 0) {
+                    tbody.innerHTML = '';
+                    data.blocked.forEach(b => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><code>${b.ip}</code></td>
+                            <td>${formatDateTime(b.timestamp)}</td>
+                            <td>${b.reason || '—'}</td>
+                            <td><button class="btn btn-sm btn-success" onclick="unblockIP('${b.ip}', this)">Unblock</button></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" class="no-data">No blocked IPs</td></tr>';
+                }
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="4" class="no-data">Error loading blocked IPs</td></tr>';
+                addEvent('Error loading blocked IPs: ' + e.message, 'error');
+            }
+        }
+
+        function toggleBlockedCard() {
+            const card = document.getElementById('blocked-ips-card');
+            if (card.style.display === 'none') {
+                loadBlockedIPs();
+            } else {
+                card.style.display = 'none';
+            }
+        }
+
+        // Атаки
+        let currentAttackIds = new Set();
+
+        async function loadAttacks(filter = 'recent') {
+            if (filter) {
+                currentFilter = filter;
+                attacksOffset = 0;
+            }
+            const spinner = document.getElementById('load-attacks-spinner');
+            const btn = document.getElementById('load-attacks-btn');
+            spinner.style.display = 'inline-block';
+            btn.disabled = true;
+
+            try {
+                let url;
+                if (currentFilter === 'today') url = `${API_BASE}/api/attacks/today`;
+                else if (currentFilter === 'recent') url = `${API_BASE}/api/attacks/recent?limit=${attacksLimit}`;
+                else url = `${API_BASE}/api/attacks/recent?limit=100`;
+
+                const resp = await fetch(url);
+                const data = await resp.json();
+                const newAttacks = data.attacks || [];
+
+                const oldIds = currentAttackIds;
+                const newIds = new Set(newAttacks.map(a => a.id));
+                const added = [...newIds].filter(id => !oldIds.has(id));
+                if (added.length > 0) {
+                    playMeow();
+                    flashRed();
+                    addEvent(`+${added.length} new attack(s)`, 'success');
+                }
+
+                allAttacks = newAttacks;
+                filterAttacks();
+                currentAttackIds = newIds;
+                attacksOffset = newAttacks.length;
+                addEvent(`Loaded ${newAttacks.length} attacks (${currentFilter})`, 'info');
+                document.getElementById('load-more-btn').style.display = (currentFilter === 'recent' && newAttacks.length >= attacksLimit) ? 'block' : 'none';
+
+                // Дополнительные метрики
+                loadExtendedStats();
+
+            } catch (e) {
+                addEvent('Error loading attacks: ' + e.message, 'error');
+                displayAttacks([]);
+            } finally {
+                spinner.style.display = 'none';
+                btn.disabled = false;
+            }
+        }
+
+        async function loadMoreAttacks() {
+            if (currentFilter !== 'recent') return;
+            const btn = document.getElementById('load-more-btn');
+            btn.disabled = true;
+            btn.innerText = 'Loading…';
+            try {
+                const resp = await fetch(`${API_BASE}/api/attacks/recent?limit=${attacksLimit}&offset=${attacksOffset}`);
+                const data = await resp.json();
+                if (data.attacks?.length) {
+                    allAttacks = allAttacks.concat(data.attacks);
+                    filterAttacks();
+                    attacksOffset += data.attacks.length;
+                    addEvent(`Loaded ${data.attacks.length} more`, 'info');
+                } else {
+                    btn.style.display = 'none';
+                }
+            } catch (e) {
+                addEvent('Error: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Load More';
+            }
+        }
+
+        function filterAttacks() {
+            const filter = document.getElementById('attack-type-filter').value;
+            if (filter === 'all') {
+                displayAttacks(allAttacks);
+            } else {
+                const filtered = allAttacks.filter(a => a.attack_type && a.attack_type.toLowerCase() === filter);
+                displayAttacks(filtered);
+            }
+        }
+
+        function displayAttacks(attacks) {
+            const tbody = document.getElementById('attacks-table-body');
+            if (!attacks || attacks.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="no-data">No attacks recorded</td></tr>';
+                return;
+            }
+            tbody.innerHTML = '';
+            attacks.forEach(a => {
+                const row = createAttackRow(a);
+                tbody.appendChild(row);
+            });
+        }
+
+        function createAttackRow(a) {
+            const row = document.createElement('tr');
+            const iso = a.isolation_result || 'N/A';
+            const rf = a.random_result || 'N/A';
+            const ip = a.source_ip || '?';
+            const isBlocked = blockedIPsSet.has(ip);
+            const payload = (a.payload || '').replace(/`/g, '\\`');
+
+            let confidence = '?';
+            try {
+                const rfObj = JSON.parse(a.random_result || '{}');
+                if (rfObj.confidence) confidence = (rfObj.confidence * 100).toFixed(0) + '%';
+            } catch {}
+
+            const buttonHtml = isBlocked
+                ? `<button class="btn btn-sm btn-success" onclick="unblockIP('${ip}', this)">Unblock</button>`
+                : `<button class="btn btn-sm btn-danger" onclick="blockIP('${ip}', this)">Block</button>`;
+
+            row.innerHTML = `
+                <td class="timestamp">${formatDateTime(a.timestamp)}</td>
+                <td><code>${ip}</code></td>
+                <td><span class="attack-badge ${getAttackBadgeClass(a.attack_type)}">${(a.attack_type || 'unknown').toUpperCase()}</span></td>
+                <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis;">${a.endpoint || ''}</td>
+                <td style="font-size:0.8rem;">
+                    <span title="Isolation Forest">I: ${typeof iso === 'string' ? iso.substring(0,20) : '?'}</span><br>
+                    <span title="Random Forest">R: ${typeof rf === 'string' ? rf.substring(0,20) : '?'}</span>
+                    <span class="info-icon" onclick='showMLDetails(${JSON.stringify(iso).replace(/'/g, "\\'")}, ${JSON.stringify(rf).replace(/'/g, "\\'")})'>ℹ️</span>
+                </td>
+                <td>${confidence}</td>
+                <td><button class="btn btn-sm" onclick='showPayload(\`${payload}\`)'>👁️</button></td>
+                <td>${buttonHtml}</td>
+            `;
+            return row;
+        }
+
+        function showPayload(payload) {
+            if (!payload) payload = 'No payload';
+            alert(payload);
+        }
+
+        function showMLDetails(iso, rf) {
+            const msg = `Isolation Forest:\n${JSON.stringify(iso, null, 2)}\n\nRandom Forest:\n${JSON.stringify(rf, null, 2)}`;
+            alert(msg);
+        }
+
+        // Блокировка IP
+        async function blockIP(ip, btnElement) {
+            if (!ip || ip === '?' || ip === 'Unknown') { alert('Invalid IP'); return; }
+            if (!confirm(`Block IP ${ip}?`)) return;
+            btnElement.disabled = true; btnElement.innerText = 'Blocking...';
+            try {
+                const resp = await fetch(`${API_BASE}/api/block/${ip}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({reason: 'Blocked from dashboard'})
+                });
+                const result = await resp.json();
+                if (result.success) {
+                    addEvent(`IP ${ip} blocked`, 'success');
+                    blockedIPsSet.add(ip);
+                    btnElement.innerText = 'Unblock';
+                    btnElement.classList.remove('btn-danger');
+                    btnElement.classList.add('btn-success');
+                    btnElement.onclick = function() { unblockIP(ip, btnElement); };
+                    loadStats(); loadBlockedIPs();
+                } else {
+                    addEvent(`Error: ${result.message}`, 'error');
+                    alert('Failed to block IP: ' + result.message);
+                    btnElement.disabled = false; btnElement.innerText = 'Block';
+                }
+            } catch (e) {
+                addEvent('Error: ' + e.message, 'error');
+                alert('Network error');
+                btnElement.disabled = false; btnElement.innerText = 'Block';
+            }
+        }
+
+        async function unblockIP(ip, btnElement) {
+            if (!ip) return;
+            if (!confirm(`Unblock IP ${ip}?`)) return;
+            btnElement.disabled = true; btnElement.innerText = 'Unblocking...';
+            try {
+                const resp = await fetch(`${API_BASE}/api/block/${ip}`, { method: 'DELETE' });
+                const result = await resp.json();
+                if (result.success) {
+                    addEvent(`IP ${ip} unblocked`, 'success');
+                    blockedIPsSet.delete(ip);
+                    btnElement.innerText = 'Block';
+                    btnElement.classList.remove('btn-success');
+                    btnElement.classList.add('btn-danger');
+                    btnElement.onclick = function() { blockIP(ip, btnElement); };
+                    loadStats(); loadBlockedIPs();
+                } else {
+                    addEvent(`Error: ${result.message}`, 'error');
+                    alert('Failed to unblock IP: ' + result.message);
+                    btnElement.disabled = false; btnElement.innerText = 'Unblock';
+                }
+            } catch (e) {
+                addEvent('Error: ' + e.message, 'error');
+                alert('Network error');
+                btnElement.disabled = false; btnElement.innerText = 'Unblock';
+            }
+        }
+
+        // Exploits
+        async function loadExploits() {
+            const tbody = document.getElementById('exploits-table-body');
+            tbody.innerHTML = '<tr><td colspan="5" class="no-data"><div class="loading"></div> Loading exploits…</td></tr>';
+            try {
+                const resp = await fetch(`${API_BASE}/api/exploits?limit=50`);
+                const data = await resp.json();
+                if (data.exploits && data.exploits.length > 0) {
+                    tbody.innerHTML = '';
+                    data.exploits.forEach(ex => {
+                        const row = document.createElement('tr');
+                        const details = ex.details || {};
+                        const trigger = details.trigger || {};
+                        const follow = details.follow_up || {};
+                        row.innerHTML = `
+                            <td>${formatDateTime(ex.end_time)}</td>
+                            <td><code>${ex.source_ip}</code></td>
+                            <td><span class="attack-badge">${ex.rule_name}</span></td>
+                            <td>${ex.description || ''}</td>
+                            <td><small>${trigger.attack_type || ''} → ${follow.attack_type || ''}</small></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                    document.getElementById('exploits-count').innerText = data.exploits.length;
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" class="no-data">No exploits detected</td></tr>';
+                    document.getElementById('exploits-count').innerText = '0';
+                }
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="5" class="no-data">Error loading exploits</td></tr>';
+                addEvent('Error loading exploits: ' + e.message, 'error');
+            }
+        }
+
+        // Дополнительные метрики
+        async function loadExtendedStats() {
+            try {
+                const resp = await fetch(`${API_BASE}/api/attacks/recent?limit=1000`);
+                const data = await resp.json();
+                const attacks = data.attacks || [];
+                if (attacks.length === 0) return;
+
+                let totalConf = 0, confCount = 0;
+                const ipCount = {};
+
+                attacks.forEach(a => {
+                    try {
+                        const rf = JSON.parse(a.random_result || '{}');
+                        if (rf.confidence) { totalConf += rf.confidence; confCount++; }
+                    } catch {}
+                    if (a.source_ip) ipCount[a.source_ip] = (ipCount[a.source_ip] || 0) + 1;
+                });
+
+                if (confCount > 0) {
+                    const avg = (totalConf / confCount * 100).toFixed(0);
+                    document.getElementById('avg-confidence').innerText = avg + '%';
+                }
+
+                let topIP = '-', maxCnt = 0;
+                for (const [ip, cnt] of Object.entries(ipCount)) {
+                    if (cnt > maxCnt) { maxCnt = cnt; topIP = ip; }
+                }
+                document.getElementById('top-attacker').innerText = topIP.length > 15 ? topIP.substring(0,12)+'…' : topIP;
+
+            } catch (e) { console.warn('Extended stats error', e); }
+        }
+
+        // График
+        async function updateAttackChart() {
+            try {
+                const resp = await fetch(`${API_BASE}/api/stats`);
+                const stats = await resp.json();
+                const chartDiv = document.getElementById('attack-types-chart');
+                if (!stats.attack_types || Object.keys(stats.attack_types).length === 0) {
+                    chartDiv.innerHTML = '<div class="no-data">No attack data yet</div>';
+                    return;
+                }
+                let total = Object.values(stats.attack_types).reduce((a, b) => a + b, 0);
+                let html = '';
+                for (const [type, count] of Object.entries(stats.attack_types)) {
+                    const percent = Math.round((count / total) * 100);
+                    html += `
+                        <div class="chart-item">
+                            <span class="attack-badge ${getAttackBadgeClass(type)}" style="min-width:100px;">${type}</span>
+                            <div class="chart-bar">
+                                <div class="chart-fill" style="width: ${percent}%;"></div>
+                            </div>
+                            <span style="min-width:70px; text-align:right;">${count} (${percent}%)</span>
+                        </div>
+                    `;
+                }
+                chartDiv.innerHTML = html;
+            } catch (e) { console.warn('Chart update failed', e); }
+        }
+
+        // Прочие функции
+        async function clearAllAttacks() {
+            if (!confirm('Delete ALL attack records?')) return;
+            const btn = document.getElementById('clear-btn');
+            btn.disabled = true; btn.innerText = 'Clearing…';
+            try {
+                const resp = await fetch(`${API_BASE}/api/attacks`, {method: 'DELETE'});
+                const result = await resp.json();
+                if (result.success) {
+                    addEvent('All attacks deleted', 'warning');
+                    loadAttacks(currentFilter); loadStats();
+                } else { addEvent('Error: ' + result.message, 'error'); }
+            } catch (e) { addEvent('Error: ' + e.message, 'error'); }
+            finally { btn.disabled = false; btn.innerText = 'Clear DB'; }
+        }
+
+        function clearEvents() {
+            document.getElementById('event-log').innerHTML = '';
+            addEvent('Event log cleared', 'info');
+        }
+
+        async function testMLServices() {
+            addEvent('Testing ML services...', 'info');
+            try {
+                const iso = await fetch('http://localhost:8001/health');
+                const rf = await fetch('http://localhost:8002/health');
+                addEvent(`Isolation Forest: ${iso.ok ? 'OK' : 'FAIL'}`, iso.ok ? 'success' : 'error');
+                addEvent(`Random Forest: ${rf.ok ? 'OK' : 'FAIL'}`, rf.ok ? 'success' : 'error');
+            } catch (e) { addEvent('Error testing ML: ' + e.message, 'error'); }
+        }
+
+        function startMonitor() {
+            addEvent('Monitor starting... check terminal', 'info');
+            alert('Run in terminal:\npython scripts/monitor_juice_improved.py');
+        }
+
+        function openJuiceShop() {
+            window.open('http://localhost:3001', '_blank');
+            addEvent('Juice Shop opened', 'info');
+        }
+
+        async function exportLogs() {
+            try {
+                const response = await fetch(`${API_BASE}/api/attacks/export?format=csv`);
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `attacks_${new Date().toISOString().slice(0,10)}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                addEvent('Logs exported', 'success');
+            } catch (error) { addEvent('Export failed: ' + error.message, 'error'); }
+        }
+
+        function toggleAutoRefresh() {
+            const btn = document.getElementById('auto-refresh-btn');
+            if (autoRefreshEnabled) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshEnabled = false;
+                btn.innerHTML = '<i class="fas fa-play"></i> Auto-refresh';
+                addEvent('Auto-refresh stopped', 'info');
+            } else {
+                autoRefreshInterval = setInterval(() => { loadAttacks(); }, 5000);
+                autoRefreshEnabled = true;
+                btn.innerHTML = '<i class="fas fa-pause"></i> Auto-refresh';
+                addEvent('Auto-refresh started (5s)', 'success');
+            }
+        }
+
+        function switchTab(tab) {
+            document.getElementById('tab-attacks').classList.toggle('active', tab === 'attacks');
+            document.getElementById('tab-exploits').classList.toggle('active', tab === 'exploits');
+            document.getElementById('attacks-panel').style.display = tab === 'attacks' ? 'block' : 'none';
+            document.getElementById('exploits-panel').style.display = tab === 'exploits' ? 'block' : 'none';
+            if (tab === 'exploits') loadExploits();
+        }
+
+        // ---------- Инициализация ----------
+        async function init() {
+            // время
+            function updateTime() {
+                document.getElementById('current-time').innerText = new Date().toLocaleTimeString();
+            }
+            updateTime();
+            setInterval(updateTime, 1000);
+
+            await loadBlockedSet();
+            checkServices();
+            loadStats();
+            loadAttacks();
+            updateAttackChart();
+            loadExploits(); // для счётчика
+
+            setInterval(() => {
+                checkServices();
+                loadStats();
+                updateAttackChart();
+                loadExploits();
+                loadExtendedStats();
+            }, 30000);
+
+            document.getElementById('sound-toggle').addEventListener('click', toggleSound);
+            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
+            if (darkTheme) {
+                document.body.classList.add('dark-theme');
+                document.getElementById('theme-toggle').innerHTML = '<i class="fas fa-sun"></i>';
+            }
+
+            addEvent('Dashboard ready', 'success');
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
